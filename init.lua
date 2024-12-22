@@ -1,7 +1,7 @@
 --[[
 
 =====================================================================
-==================== READ THIS BEFORE CONTINUING ====================
+=================== READ THIS BEFORE CONTINUING ====================
 =====================================================================
 ========                                    .-----.          ========
 ========         .----------------------.   | === |          ========
@@ -29,7 +29,7 @@ What is Kickstart?
     what your configuration is doing, and modify it to suit your needs.
 
     Once you've done that, you can start exploring, configuring and tinkering to
-    make Neovim your own! That might mean leaving Kickstart just the way it is for a while
+    make Neovim your own! That might mean leaving Kick/tart just the way it is for a while
     or immediately breaking it into modular pieces. It's up to you!
 
     If you don't know anything about Lua, I recommend taking some time to read through
@@ -89,7 +89,7 @@ P.S. You can delete this when you're done too. It's your config now! :)
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
-
+vim.opt.number = true
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
@@ -99,7 +99,7 @@ vim.g.have_nerd_font = false
 --  For more options, you can see `:help option-list`
 
 -- Make line numbers default
-vim.opt.number = true
+vim.opt.relativenumber = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
 -- vim.opt.relativenumber = true
@@ -156,6 +156,11 @@ vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
+
+vim.opt.shiftwidth = 2
+vim.opt.tabstop = 2
+vim.opt.softtabstop = 2
+vim.opt.sta = true
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -227,7 +232,7 @@ vim.opt.rtp:prepend(lazypath)
 --    :Lazy update
 --
 -- NOTE: Here is where you install your plugins.
-require('lazy').setup({
+require('lazy').setup {
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
 
@@ -243,6 +248,66 @@ require('lazy').setup({
   --    require('gitsigns').setup({ ... })
   --
   -- See `:help gitsigns` to understand what the configuration keys do
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    event = 'VimEnter',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      local harpoon = require 'harpoon'
+
+      -- REQUIRED
+      harpoon:setup()
+      -- REQUIRED
+
+      vim.keymap.set('n', '<leader>a', function()
+        harpoon:list():add()
+      end)
+      vim.keymap.set('n', '<C-e>', function()
+        harpoon.ui:toggle_quick_menu(harpoon:list())
+      end)
+
+      vim.keymap.set('n', '<C-l>', function()
+        harpoon:list():select(1)
+      end)
+      vim.keymap.set('n', '<C-d>', function()
+        harpoon:list():select(2)
+      end)
+      vim.keymap.set('n', '<C-h>', function()
+        harpoon:list():select(3)
+      end)
+      vim.keymap.set('n', '<C-t>', function()
+        harpoon:list():select(4)
+      end)
+
+      -- Toggle previous & next buffers stored within Harpoon list
+      vim.keymap.set('n', '<C-S-P>', function()
+        harpoon:list():prev()
+      end)
+      vim.keymap.set('n', '<C-S-N>', function()
+        harpoon:list():next()
+      end)
+    end,
+  },
+  {
+    'Julian/lean.nvim',
+    event = { 'BufReadPre *.lean', 'BufNewFile *.lean' },
+
+    dependencies = {
+      'neovim/nvim-lspconfig',
+      'nvim-lua/plenary.nvim',
+      'hrsh7th/nvim-cmp',
+      -- you also will likely want nvim-cmp or some completion engine
+    },
+    opts = {
+      lsp = {},
+      mappings = true,
+    },
+    config = function()
+      require('lean').setup {}
+    end,
+  },
+
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
@@ -271,56 +336,44 @@ require('lazy').setup({
   -- after the plugin has been loaded:
   --  config = function() ... end
 
-  { -- Useful plugin to show you pending keybinds.
-    'folke/which-key.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
-    opts = {
-      icons = {
-        -- set icon mappings to true if you have a Nerd Font
-        mappings = vim.g.have_nerd_font,
-        -- If you are using a Nerd Font: set icons.keys to an empty table which will use the
-        -- default which-key.nvim defined Nerd Font icons, otherwise define a string table
-        keys = vim.g.have_nerd_font and {} or {
-          Up = '<Up> ',
-          Down = '<Down> ',
-          Left = '<Left> ',
-          Right = '<Right> ',
-          C = '<C-…> ',
-          M = '<M-…> ',
-          D = '<D-…> ',
-          S = '<S-…> ',
-          CR = '<CR> ',
-          Esc = '<Esc> ',
-          ScrollWheelDown = '<ScrollWheelDown> ',
-          ScrollWheelUp = '<ScrollWheelUp> ',
-          NL = '<NL> ',
-          BS = '<BS> ',
-          Space = '<Space> ',
-          Tab = '<Tab> ',
-          F1 = '<F1>',
-          F2 = '<F2>',
-          F3 = '<F3>',
-          F4 = '<F4>',
-          F5 = '<F5>',
-          F6 = '<F6>',
-          F7 = '<F7>',
-          F8 = '<F8>',
-          F9 = '<F9>',
-          F10 = '<F10>',
-          F11 = '<F11>',
-          F12 = '<F12>',
-        },
-      },
-
-      -- Document existing key chains
-      spec = {
-        { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
-        { '<leader>d', group = '[D]ocument' },
-        { '<leader>r', group = '[R]ename' },
-        { '<leader>s', group = '[S]earch' },
-        { '<leader>w', group = '[W]orkspace' },
-        { '<leader>t', group = '[T]oggle' },
-        { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+  -- Useful plugin to show you pending keybinds.
+  'folke/which-key.nvim',
+  event = 'VimEnter', -- Sets the loading event to 'VimEnter'
+  opts = {
+    icons = {
+      -- set icon mappings to true if you have a Nerd Font
+      mappings = vim.g.have_nerd_font,
+      -- If you are using a Nerd Font: set icons.keys to an empty table which will use the
+      -- default which-key.nvim defined Nerd Font icons, otherwise define a string table
+      keys = vim.g.have_nerd_font and {} or {
+        Up = '<Up> ',
+        Down = '<Down> ',
+        Left = '<Left> ',
+        Right = '<Right> ',
+        C = '<C-…> ',
+        M = '<M-…> ',
+        D = '<D-…> ',
+        S = '<S-…> ',
+        CR = '<CR> ',
+        Esc = '<Esc> ',
+        ScrollWheelDown = '<ScrollWheelDown> ',
+        ScrollWheelUp = '<ScrollWheelUp> ',
+        NL = '<NL> ',
+        BS = '<BS> ',
+        Space = '<Space> ',
+        Tab = '<Tab> ',
+        F1 = '<F1>',
+        F2 = '<F2>',
+        F3 = '<F3>',
+        F4 = '<F4>',
+        F5 = '<F5>',
+        F6 = '<F6>',
+        F7 = '<F7>',
+        F8 = '<F8>',
+        F9 = '<F9>',
+        F10 = '<F10>',
+        F11 = '<F11>',
+        F12 = '<F12>',
       },
     },
   },
@@ -615,7 +668,16 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
+        clangd = {
+          offsetEncoding = { 'utf-8', 'utf-16' },
+          textDocument = {
+            completion = {
+              editsNearCursor = true,
+            },
+          },
+        },
+        matlab_ls = {},
+
         -- gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
@@ -930,7 +992,7 @@ require('lazy').setup({
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
@@ -944,27 +1006,26 @@ require('lazy').setup({
   -- Or use telescope!
   -- In normal mode type `<space>sh` then write `lazy.nvim-plugin`
   -- you can continue same window with `<space>sr` which resumes last telescope search
-}, {
-  ui = {
-    -- If you are using a Nerd Font: set icons to an empty table which will use the
-    -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table
-    icons = vim.g.have_nerd_font and {} or {
-      cmd = '⌘',
-      config = '🛠',
-      event = '📅',
-      ft = '📂',
-      init = '⚙',
-      keys = '🗝',
-      plugin = '🔌',
-      runtime = '💻',
-      require = '🌙',
-      source = '📄',
-      start = '🚀',
-      task = '📌',
-      lazy = '💤 ',
-    },
+}
+ui = {
+  -- If you are using a Nerd Font: set icons to an empty table which will use the
+  -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table
+  icons = vim.g.have_nerd_font and {} or {
+    cmd = '⌘',
+    config = '🛠',
+    event = '📅',
+    ft = '📂',
+    init = '⚙',
+    keys = '🗝',
+    plugin = '🔌',
+    runtime = '💻',
+    require = '🌙',
+    source = '📄',
+    start = '🚀',
+    task = '📌',
+    lazy = '💤 ',
   },
-})
+}
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
